@@ -3,7 +3,13 @@ const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
 const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const electronBuilder = path.join(
+  root,
+  'electron',
+  'node_modules',
+  '.bin',
+  process.platform === 'win32' ? 'electron-builder.cmd' : 'electron-builder',
+);
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -21,6 +27,4 @@ function run(command, args, options = {}) {
 run(pnpm, ['build'], { env: { ELECTRON_BUILD: '1' } });
 run(pnpm, ['desktop:prepare']);
 run(pnpm, ['install', '--dir', 'electron', '--no-frozen-lockfile']);
-run(npx, ['--yes', 'electron-builder', '--config', 'electron-builder.yml'], {
-  cwd: path.join(root, 'electron'),
-});
+run(electronBuilder, ['--config', 'electron-builder.yml']);
