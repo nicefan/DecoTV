@@ -2,6 +2,9 @@ appId: com.decotv.desktop
 productName: DecoTV
 electronVersion: 37.10.3
 
+electronFuses:
+  runAsNode: true
+
 asar: true
 
 files:
