@@ -10,10 +10,10 @@ files:
 
 directories:
   app: electron
-  output: ../dist-electron
+  output: dist-electron
 
 extraResources:
-  - from: ../.next/standalone
+  - from: .next/standalone
     to: app-server
 
 win:
