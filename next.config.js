@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  // 根据环境自动选择输出模式：Vercel自动处理，Docker使用standalone
-  // 本地开发时不使用 standalone 避免 Windows 符号链接权限问题
-  ...(process.env.VERCEL || process.env.DOCKER_BUILD
+  // 根据环境自动选择输出模式：Vercel、Docker 和 Electron 使用 standalone
+  // 本地开发时不使用 standalone，避免 Windows 符号链接权限问题
+  ...(process.env.VERCEL || process.env.DOCKER_BUILD || process.env.ELECTRON_BUILD
     ? { output: 'standalone' }
     : {}),
 
