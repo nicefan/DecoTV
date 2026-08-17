@@ -1,0 +1,6 @@
+{
+  "name": "decotv-desktop",
+  "version": "1.5.0",
+  "private": true,
+  "main": "main.cjs"
+}
