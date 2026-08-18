@@ -63,6 +63,7 @@ function waitForServer(url, timeoutMs = 30000) {
 function startServer(port) {
   const serverRoot = path.join(process.resourcesPath, 'app-server');
   const serverEntry = path.join(serverRoot, 'server.js');
+  let stderrTail = '';
 
   writeLog(`resourcesPath=${process.resourcesPath}`);
   writeLog(`serverRoot=${serverRoot}`);
@@ -71,6 +72,11 @@ function startServer(port) {
   if (!fs.existsSync(serverEntry)) {
     throw new Error(`Bundled Next.js server not found: ${serverEntry}`);
   }
+
+  let rejectEarlyExit;
+  const earlyExit = new Promise((_, reject) => {
+    rejectEarlyExit = reject;
+  });
 
   serverProcess = utilityProcess.fork(serverEntry, [], {
     cwd: serverRoot,
@@ -88,14 +94,34 @@ function startServer(port) {
   serverProcess.on('spawn', () => {
     writeLog(`Server utility process spawned pid=${serverProcess.pid}`);
   });
-  serverProcess.stdout?.on('data', (data) => writeLog(`[server stdout] ${String(data).trim()}`));
-  serverProcess.stderr?.on('data', (data) => writeLog(`[server stderr] ${String(data).trim()}`));
+  serverProcess.stdout?.on('data', (data) => {
+    writeLog(`[server stdout] ${String(data).trim()}`);
+  });
+  serverProcess.stderr?.on('data', (data) => {
+    const text = String(data);
+    stderrTail = `${stderrTail}${text}`.slice(-12000);
+    writeLog(`[server stderr] ${text.trim()}`);
+  });
   serverProcess.on('error', (type, location, report) => {
-    writeLog(`[server error] type=${type} location=${location} report=${report || ''}`);
+    const message = `Server process error: type=${type} location=${location} report=${report || ''}`;
+    writeLog(message);
+    rejectEarlyExit(new Error(message));
   });
   serverProcess.on('exit', (code) => {
     writeLog(`Server exited (code=${code})`);
+    if (code !== 0) {
+      const details = stderrTail.trim();
+      rejectEarlyExit(
+        new Error(
+          details
+            ? `DecoTV server exited with code ${code}:\n\n${details}`
+            : `DecoTV server exited with code ${code} before listening on the local port.`,
+        ),
+      );
+    }
   });
+
+  return earlyExit;
 }
 
 function createWindow(url) {
@@ -134,8 +160,8 @@ async function startDesktopApp() {
   const port = await getFreePort();
   const url = `http://127.0.0.1:${port}`;
   writeLog(`Allocated port ${port}`);
-  startServer(port);
-  await waitForServer(url);
+  const serverFailure = startServer(port);
+  await Promise.race([waitForServer(url), serverFailure]);
   createWindow(url);
   writeLog('BrowserWindow created');
 }
