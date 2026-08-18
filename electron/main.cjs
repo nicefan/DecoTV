@@ -1,5 +1,4 @@
-const { app, BrowserWindow, dialog, shell } = require('electron');
-const { spawn } = require('node:child_process');
+const { app, BrowserWindow, dialog, shell, utilityProcess } = require('electron');
 const fs = require('node:fs');
 const http = require('node:http');
 const net = require('node:net');
@@ -73,13 +72,12 @@ function startServer(port) {
     throw new Error(`Bundled Next.js server not found: ${serverEntry}`);
   }
 
-  serverProcess = spawn(process.execPath, [serverEntry], {
+  serverProcess = utilityProcess.fork(serverEntry, [], {
     cwd: serverRoot,
-    windowsHide: true,
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: 'pipe',
+    serviceName: 'DecoTV Next.js Server',
     env: {
       ...process.env,
-      ELECTRON_RUN_AS_NODE: '1',
       HOSTNAME: '127.0.0.1',
       PORT: String(port),
       NODE_ENV: 'production',
@@ -87,11 +85,16 @@ function startServer(port) {
     },
   });
 
+  serverProcess.on('spawn', () => {
+    writeLog(`Server utility process spawned pid=${serverProcess.pid}`);
+  });
   serverProcess.stdout?.on('data', (data) => writeLog(`[server stdout] ${String(data).trim()}`));
   serverProcess.stderr?.on('data', (data) => writeLog(`[server stderr] ${String(data).trim()}`));
-  serverProcess.on('error', (error) => writeLog(`[server error] ${error.stack || error.message}`));
-  serverProcess.on('exit', (code, signal) => {
-    writeLog(`Server exited (code=${code}, signal=${signal})`);
+  serverProcess.on('error', (type, location, report) => {
+    writeLog(`[server error] type=${type} location=${location} report=${report || ''}`);
+  });
+  serverProcess.on('exit', (code) => {
+    writeLog(`Server exited (code=${code})`);
   });
 }
 
@@ -153,5 +156,5 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
-  if (serverProcess && !serverProcess.killed) serverProcess.kill();
+  if (serverProcess) serverProcess.kill();
 });
