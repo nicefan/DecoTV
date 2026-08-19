@@ -16,7 +16,7 @@ directories:
   output: dist-electron
 
 extraResources:
-  - from: .next/standalone
+  - from: .next/electron-standalone
     to: app-server
 
 win:
