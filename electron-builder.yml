@@ -1,0 +1,34 @@
+appId: com.decotv.desktop
+productName: DecoTV
+electronVersion: 37.10.3
+
+electronFuses:
+  runAsNode: true
+
+asar: true
+
+files:
+  - main.cjs
+  - package.json
+
+directories:
+  app: electron
+  output: dist-electron
+
+extraResources:
+  - from: .next/electron-standalone
+    to: app-server
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: DecoTV-${version}-${arch}-Setup.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: DecoTV

@@ -21,7 +21,9 @@
     "prepare": "husky install",
     "vercel-build": "pnpm gen:manifest && pnpm gen:version && next build",
     "docker:build": "docker build -t decotv .",
-    "docker:run": "docker run -p 3000:3000 decotv"
+    "docker:run": "docker run -p 3000:3000 decotv",
+    "desktop:prepare": "node scripts/prepare-electron.js",
+    "desktop:build": "node scripts/build-electron.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

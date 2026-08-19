@@ -1,0 +1,10 @@
+{
+  "name": "decotv-desktop",
+  "version": "1.5.0",
+  "private": true,
+  "main": "main.cjs",
+  "devDependencies": {
+    "electron": "37.10.3",
+    "electron-builder": "26.15.3"
+  }
+}
